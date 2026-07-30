@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>유퀴즈?</title>
+    <style>
+        /* 웹폰트 적용 (Pretendard) */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root {
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-light: #EFF6FF;
+            --success: #10B981;
+            --success-light: #D1FAE5;
+            --danger: #EF4444;
+            --danger-light: #FEE2E2;
+            --dark: #1E293B;
+            --gray-text: #64748B;
+            --border: #E2E8F0;
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #CBD5E1;
+            color: var(--dark);
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            justify-content: center;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg-color);
+            min-height: 100dvh; 
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem; 
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; 
+        }
+
+        .header-icon {
+            height: 2.4rem; 
+            width: auto;
+            object-fit: contain;
+        }
+
+        .feedback-custom-icon {
+            height: 4.5rem; 
+            width: auto;
+            object-fit: contain;
+        }
+
+        main {
+            flex: 1;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.3s ease; }
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background-color: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn:active { transform: translateY(2px); box-shadow: 0 0px 0px rgba(0,0,0,0); }
+        .btn:disabled { background-color: #94A3B8; cursor: not-allowed; box-shadow: none; transform: none; }
+        .btn-success { background-color: var(--success); }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px; 
+            margin-top: 10px;
+        }
+        .month-btn {
+            background-color: var(--card-bg);
+            color: var(--dark);
+            border: 2px solid var(--border);
+            padding: 8px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 55px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .month-btn.active-month {
+            border-color: var(--primary);
+            color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        .month-btn.disabled-month {
+            opacity: 0.5;
+            background-color: #F1F5F9;
+        }
+
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .month-badge {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid var(--primary);
+        }
+        .progress { 
+            color: var(--gray-text); 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            margin-left: auto; 
+        }
+        
+        .question-box {
+            background-color: var(--card-bg);
+            padding: 20px 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .question-text {
+            font-size: 1.15rem;
+            line-height: 1.4;
+            font-weight: 700;
+            word-break: keep-all;
+            text-align: center;
+            margin: 0;
+        }
+
+        .question-image {
+            width: 100%;
+            height: 220px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: none;
+            background-color: var(--bg-color);
+        }
+
+        .input-area { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; } 
+
+        .option-btn {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--dark);
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .option-btn.ox-mode { text-align: center; justify-content: center; font-size: 4rem; height: 120px; font-weight: 800; font-family: sans-serif; } 
+        .ox-btn-o { color: var(--primary); }
+        .ox-btn-x { color: var(--danger); }
+        .ox-container { display: flex; gap: 12px; }
+        .ox-container .option-btn { flex: 1; }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary);
+        }
+        .ox-btn-o.selected {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        .ox-btn-x.selected {
+            border-color: var(--danger);
+            background-color: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .drop-zone {
+            display: inline-block;
+            min-width: 60px;
+            height: 32px;
+            border-bottom: 2px dashed var(--gray-text);
+            text-align: center;
+            vertical-align: middle;
+            color: var(--primary);
+            font-weight: bold;
+            padding: 0 10px;
+            margin: 0 5px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .drop-zone.active-drop { background-color: var(--primary-light); border-bottom-color: var(--primary); }
+        .drop-zone.has-item { border-bottom-style: solid; border-bottom-color: var(--primary); }
+        
+        .drag-options-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        .drag-item {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border);
+            padding: 10px 8px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: grab;
+            touch-action: none; 
+            user-select: none;
+            transition: opacity 0.2s;
+            text-align: center; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: keep-all;
+        }
+        .drag-clone {
+            position: fixed; 
+            z-index: 9999;
+            pointer-events: none; 
+            background-color: var(--card-bg);
+            border: 2px solid var(--primary);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        #submit-btn {
+            position: sticky;
+            bottom: 50px; 
+            z-index: 100;
+            margin-top: auto; 
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); 
+        }
+
+        #inline-feedback {
+            text-align: center;
+            background-color: var(--success-light);
+            border: 1px solid var(--success);
+            border-radius: 16px;
+            padding: 20px 15px;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            position: sticky;
+            bottom: 50px; 
+            z-index: 100;
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .chosung-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .box-container {
+            display: flex;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .char-box {
+            width: 50px;
+            height: 60px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--dark);
+            transition: all 0.2s;
+        }
+        .char-box.placeholder { color: #CBD5E1; }
+        .char-box.active-focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .hidden-input {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            opacity: 0;
+            color: transparent;
+            background: transparent;
+            caret-color: transparent;
+            font-size: 16px;
+            border: none;
+            outline: none;
+            z-index: 5;
+        }
+
+        .spot-wrong-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            cursor: crosshair;
+        }
+        .spot-wrong-container img {
+            width: 100%;
+            display: block;
+        }
+        .spot-marker {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            border: 4px solid var(--danger);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 0 2px white inset, 0 0 5px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(3px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-icon { font-size: 3rem; margin-bottom: 10px; }
+        .modal-title { font-size: 1.2rem; color: var(--danger); font-weight: 700; margin: 0 0 15px 0; }
+        .modal-desc { 
+            font-size: 1rem; line-height: 1.6; margin-bottom: 20px; word-break: keep-all; 
+            color: var(--dark); background: var(--bg-color); padding: 15px; border-radius: 12px;
+            border: 1px solid var(--border); text-align: left;
+        }
+
+        .result-container { text-align: center; padding: 30px 10px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .trophy { font-size: 4rem; margin-bottom: 15px; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .result-title { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+        .result-msg { font-size: 1.05rem; line-height: 1.5; color: var(--gray-text); margin-bottom: 20px; word-break: keep-all; }
+
+        #header-home-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--gray-text);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 10px;
+            display: none; 
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        #header-home-btn:active { background-color: var(--border); }
+
+        #toast {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        @keyframes toastFade {
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            10% { opacity: 1; transform: translate(-50%, 0); }
+            90% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <header style="position: relative;">
+        <h1 id="header-title">🍽️ 유퀴즈?</h1>
+        <button id="header-home-btn" onclick="goHome()">🏠 메인</button>
+    </header>
+
+    <main>
+        <div id="home-screen" class="screen active">
+            <h2 style="font-size: 1.05rem; color: var(--gray-text); font-weight: 600; text-align: center; margin-top: 0;">진행할 월을 선택해주세요</h2>
+            <div id="month-grid" class="month-grid">
+                <!-- JS에서 버튼 동적 생성 -->
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="quiz-month-badge" class="month-badge"></span>
+                <span class="progress" id="quiz-progress">1 / 3</span>
+            </div>
+            
+            <div class="question-box">
+                <img id="question-image" class="question-image" src="" alt="문제 이미지" onerror="this.style.display='none'">
+                <h3 class="question-text" id="question-text">문제 내용</h3>
+            </div>
+            
+            <div class="input-area" id="input-area">
+                <!-- 문제 타입별 입력 UI 동적 생성 -->
+            </div>
+
+            <button id="submit-btn" class="btn" disabled onclick="checkAnswer()">정답 확인</button>
+
+            <div id="inline-feedback" style="display: none;">
+                <div id="correct-icon-container" style="font-size: 2.5rem; margin-bottom: 10px; display: flex; justify-content: center;">🎉</div>
+                <h2 style="color: var(--success); font-size: 1.3rem; margin: 0 0 10px 0;">정답입니다!</h2>
+                <p style="color: var(--gray-text); font-size: 0.95rem; margin-bottom: 15px; word-break: keep-all;">잘 알고 계시네요! 아래 해설을 읽고 다음 문제로 넘어가주세요.</p>
+                <div id="correct-explanation" style="background: var(--card-bg); color: var(--dark); padding: 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.4); text-align: left; word-break: keep-all;"></div>
+                <button class="btn btn-success" onclick="nextQuestion()">다음 문제로 이동</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="result-container">
+                <div class="trophy">🏆</div>
+                <div class="result-title" id="result-title">위생교육 완료!</div>
+                <div class="result-msg">퀴즈를 모두 완료하셨습니다.<br>오늘도 안전하고 깨끗한 급식을 위해<br>수고하셨습니다.</div>
+                
+                <button class="btn btn-success" onclick="goHome()" style="margin-bottom: 20px;">메인 화면으로 이동</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="feedback-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="incorrect-icon-container" class="modal-icon" style="display: flex; justify-content: center;">💡</div>
+            <h3 class="modal-title">아쉽습니다! 다시 기억해봐요.</h3>
+            <div class="modal-desc" id="modal-explanation">해설 내용이 여기에 들어갑니다.</div>
+            
+            <button class="btn" onclick="closeModalAndNext()">다음으로 이동</button>
+        </div>
+    </div>
+    
+    <div id="toast">메시지</div>
+</div>
+
+<script>
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+function playCorrectSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const freqs = [523.25, 659.25, 783.99, 1046.50];
+    freqs.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const startTime = now + (i * 0.1);
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+        osc.start(startTime);
+        osc.stop(startTime + 0.2);
+    });
+}
+
+function playWrongSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = 'triangle'; 
+    osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.4);
+}
+
+const mainIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/main_1.webp?raw=true"; 
+const mainRightIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/main_2.webp?raw=true"; 
+const quizIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/sub.webp?raw=true"; 
+const badgeImageUrl = ""; 
+const correctIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/correct.webp?raw=true"; 
+const incorrectIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/wrong.webp?raw=true"; 
+const titleImageUrl = "https://github.com/thtkssla/foodhygiene/blob/main/%EC%9C%A0%ED%80%B4%EC%A6%88.webp?raw=true"; 
+
+const quizData = {
+    march: [
+        {
+            id: 1, type: "OX", 
+            question: "급식종사자는 건강진단을 1년에 1회만 받으면 된다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/mar_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "학교급식법령에 따라 6개월에 1회 건강진단을 실시해야 합니다."
+        },
+        {
+            id: 2, type: "MULTI", layout: "grid",
+            question: "손을 씻어야 하는 시기로 적절하지 않은 것은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/mar_2.webp?raw=true", 
+            answer: "정답 없음", 
+            options: ["1. 작업을 시작하기 전", "2. 화장실 사용 후", "3. 쓰레기 취급 후", "4. 코를 풀거나 재채기 후"],
+            hint: "",
+            explanation: "작업을 시작하기 전, 코를 풀거나 재채기 후, 쓰레기 취급 후, 화장실 사용 후 손은 꼭 씻어야 합니다."
+        },
+        {
+            id: 3, type: "SPOT_WRONG",
+            question: "새학기 맞이 복장 점검! 조리실무사님의 모습에서\n'무심코 하는 금지 행위' 2가지를 찾아보세요",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/mar_3.webp?raw=true", 
+            answer: [
+                { x: 62.5, y: 66.4, radius: 15 },
+                { x: 62.7, y: 28.5, radius: 15 } 
+            ],
+            hint: "", 
+            explanation: "시계, 반지, 귀걸이 등의 장신구는 오염과 이물질 혼입의 원인이 되므로 착용을 금지하며, 매니큐어 등도 지워야 합니다."
+        }
+    ],
+    april: [
+        {
+            id: 4, type: "OX", 
+            question: "배식 골든타임을 지키기 위해\n 조리 완료 후부터 2시간 이내에 배식을 완료해야 한다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/apr_1.webp?raw=true",
+            answer: "O", options: [], hint: "", 
+            explanation: "배식 골든타임을 지키기 위해 조리 완료 후부터 2시간 이내에 배식을 완료해야 합니다."
+        },
+        {
+            id: 5, type: "DRAG",
+            question: "패류(조개류)를 가열 조리할 때 지켜야 하는\n 올바른 중심온도와 시간 기준은 ( )입니다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/apr_2.webp?raw=true", 
+            answer: "85℃에서 1분 이상", 
+            options: ["65℃에서 1분 이상", "75℃에서 1분 이상", "85℃에서 1분 이상", "100℃에서 1분 이상"],
+            hint: "",
+            explanation: "패류 조리 시 내부 중심온도는 85℃에서 1분 이상 유지해야 노로바이러스 등을 예방할 수 있습니다."
+        },
+        {
+            id: 6, type: "MULTI",
+            question: "CCP 일지 작성 요령으로\n 올바르지 않은 것은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/apr_3.webp?raw=true", 
+            answer: "4", 
+            options: ["1. 기록은 현장에서 작성한다.", "2. 숫자는 정직하게 작성하며 기준 이탈 시 개선조치를 한다.", "3. 여러 음식에 공통으로 들어가는 식재료(마늘, 파 등)는 한번만 작성해도 된다.", "4. 소스류는 끓이는 공정이므로 중심온도를 체크하지 않아도 된다."],
+            hint: "",
+            explanation: "끓이는 소스류는 공정에 따라 장시간 가열이 안될 수도 있으니 식품 중심온도를 체크해야 합니다."
+        }
+    ],
+    may: [
+        {
+            id: 7, type: "OX", 
+            question: "식재료 검수 시 흙이 묻은 감자 등 오염도가 높은 식품을 먼저 검수한 뒤, 신선 채소를 검수한다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/may_1.webp?raw=true",
+            answer: "X", options: [], hint: "", 
+            explanation: "검수는 오염도가 낮은 식품부터 오염도가 높은 식품 순서로 실시해야 교차오염을 막을 수 있습니다."
+        },
+        {
+            id: 8, type: "MULTI",
+            question: "식재료 검수 시 식품온도 기준으로 틀린 것은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/may_2.webp?raw=true", 
+            answer: "3", 
+            options: ["1. 냉장식품은 10℃ 이하", "2. 전처리 농산물은 10℃ 이하", "3. 생선 및 육류는 10℃ 이하", "4. 냉동식품은 녹은 흔적 없이 냉동상태 유지"],
+            hint: "",
+            explanation: "생선 및 육류의 표면온도는 5℃ 이하여야 합니다."
+        },
+        {
+            id: 9, type: "CHOSUNG",
+            question: "식품창고에 보관 중인 식재료를 사용할 때, 먼저 들어온 식재료를 먼저 사용하는 원칙은 무엇일까요? (ㅅㅇㅅㅊ)",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/may_3.webp?raw=true", 
+            answer: "선입선출",
+            hint: ["ㅅ", "ㅇ", "ㅅ", "ㅊ"], 
+            explanation: "선입선출은 재고 관리에서 먼저 입고된 식품을 먼저 사용하여 소비기한이 지나거나 품질이 저하되는 것을 방지합니다."
+        }
+    ],
+    june: [
+        {
+            id: 10, type: "OX", 
+            question: "바빠서 시간이 없다면, 고기를 자른 도마에\n 그대로 채소를 썰어도 된다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jun_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "교차오염을 막기 위해 육류용, 채소용 도마는 반드시 구분해서 사용해야 합니다."
+        },
+        {
+            id: 11, type: "MULTI",
+            question: "다음 중 조리실 내에서 교차오염이 발생할 수 있는\n 위험한 행동은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jun_2.webp?raw=true", 
+            answer: "3", 
+            options: ["1. 칼과 도마를 용도별 구분 사용", "2. 어육류와 채소류 세정대 구분 사용", "3. 소독 완료된 식재료를 전처리용 칼로 작업", "4. 전처리된 식품과 조리 완료된 음식 분리 보관"],
+            hint: "",
+            explanation: "소독이 완료된 식재료는 조리실로 이동하여 조리용 칼로 작업해야 합니다."
+        },
+        {
+            id: 12, type: "SPOT_WRONG",
+            question: "아차! 깜빡하기 쉬운 실수가 있군요.\n 잘못된 부분을 찾아주세요!",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jun_3.webp?raw=true", 
+            answer: { x: 11.8, y: 56.7, radius: 15 },
+            hint: "", 
+            explanation: "김치를 써는 작업은 청결작업구역에서 실시해야 합니다."
+        }
+    ],
+    july: [
+        {
+            id: 13, type: "OX", 
+            question: "세척제와 살균·소독제를 임의로 섞어 쓰면 유해가스가 발생할 수 있으므로 절대 혼합해서는 안 된다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jul_1.webp?raw=true", 
+            answer: "O", options: [], hint: "", 
+            explanation: "세척제와 살균·소독제를 임의로 섞어 쓰면 유해가스가 발생할 수 있습니다. 세척제와 살균·소독제는 용도와 사용량을 준수하시길 바랍니다."
+        },
+        {
+            id: 14, type: "MULTI",
+            question: "기구 소독 방법의 완벽 해부도로 틀린 것은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jul_2.webp?raw=true", 
+            answer: "2", 
+            options: ["1. 열탕소독: 100℃ 30초 이상", "2. 건열소독: 표면온도 70℃ 이상", "3. 자외선소독: 겹치지 않게 30~60분 처리", "4. 화학소독: 용법에 맞게 사용하고 자연건조"],
+            hint: "",
+            explanation: "건열소독은 표면온도 71℃ 이상으로 thermolabel 부착시 변색으로 확인할 수 있습니다."
+        },
+        {
+            id: 15, type: "CHOSUNG",
+            question: "급식기구나 용기 표면에 존재하는 유해 미생물을 안전한 수준으로 감소시키거나 완전히 제거하는 과정을 무엇이라 하나요? (ㅅㄷ)",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/jul_3.webp?raw=true", 
+            answer: "소독",
+            hint: ["ㅅ", "ㄷ"], 
+            explanation: "세척 후 이물질을 제거한 뒤 소독을 진행해야 효과가 높습니다."
+        }
+    ],
+    september: [
+        {
+            id: 16, type: "DRAG",
+            question: "식품위생법에 따르면 (  )(이)란 식품의 제조·가공·조리·유통 과정에서 정상적으로 사용된 원료나 재료가 아닌 것으로서, 섭취할 때 위해가 발생할 우려가 있거나 먹기에 부적합한 물질을 말합니다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/sep_1.webp?raw=true", 
+            answer: "이물", 
+            options: ["교차오염", "이물", "부적합 식재료", "유해물질"],
+            hint: "",
+            explanation: "식품위생법에서는 조리시 사용하는 정상적인 식재료가 아닌데 음식에 들어가서 위생상 문제를 일으키거나 먹기에 적당하지 않은 모든 물질을 '이물'이라고 부릅니다."
+        },
+        {
+            id: 17, type: "OX", 
+            question: "배식 중 이물이 발견되거나 학생의 클레임이 발생하면 추가적인 피해를 막기 위해 즉시 배식을 중단하고,\n영양교사 선생님께 신속히 보고하여 후속 조치가 이뤄지도록 해야 한다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/sep_2.webp?raw=true", 
+            answer: "O", options: [], hint: "", 
+            explanation: "이물 발견이나 클레임 발생 시에는 추가 피해를 예방하기 위해 즉시 배식을 중단해야 하며, 신속하게 영양교사에게 보고해야 합니다."
+        },
+        {
+            id: 18, type: "MULTI",
+            question: "철저한 이물 혼입 예방 수칙으로\n 올바르지 않은 것은 무엇일까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/sep_3.webp?raw=true", 
+            answer: "3", 
+            options: ["1. 작업 전 위생복 등을 롤러로 사용해 이물을 제거한다", "2. 검수 시 식재료를 꼼꼼히 선별하고 포장재를 제거한다", "3. 작업 중 편의를 위해 음식 덮개를 열어두고 방치한다", "4.  방충문, 에어커튼 등을 자주 점검한다."],
+            hint: "",
+            explanation: "음식을 보관시 덮개가 미비하면 이물이 혼입될 수 있으니 반드시 덮개를 덮어야 합니다."
+        }
+    ],
+    october: [
+        {
+            id: 19, type: "OX", 
+            question: "꽁꽁 언 냉동 고기를 빨리 녹이기 위해\n 조리실 상온(실온)에 그냥 꺼내둔다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/oct_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "상온 방치는 세균이 번식하기 쉬우므로 냉장 해동, 유수 해동, 전자레인지 등을 이용해야 합니다. 또한, 해동 과정 중에는 반드시 '해동 중' 표시를 부착해야 합니다."
+        },
+        {
+            id: 20, type: "DRAG",
+            question: "모든 식재료 및 식품 취급 작업은 바닥으로부터\n 최소 ( )cm 이상 높이에서 실시해야 교차오염을 막을 수 있습니다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/may_2.webp?raw=true",
+            answer: "60", 
+            options: ["10", "30", "60", "100"],
+            hint: "",
+            explanation: "바닥으로부터 60cm 이상의 높이인 식품 검수대나 작업대에서 취급해야 안전합니다."
+        },
+        {
+            id: 21, type: "CHOSUNG",
+            question: "냉동 식품을 밀봉하여 21℃ 이하의 흐르는 물에\n 해동하는 방법을 무엇이라고 하나요? (ㅇㅅㅎㄷ)",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/oct_3.webp?raw=true", 
+            answer: "유수해동",
+            hint: ["ㅇ", "ㅅ", "ㅎ", "ㄷ"], 
+            explanation: "밀봉한 식품을 21℃ 이하의 흐르는 물에서 해동해야 세균 증식을 막을 수 있습니다."
+        }
+    ],
+    november: [
+        {
+            id: 22, type: "OX", 
+            question: "생채소나 과일은 유효염소농도 80~130ppm 소독액에 10분 이상 오래 담가둘수록 소독 효과가 좋다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/nov_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "소독액(80~130ppm)에 5분간 침지한 후, 깨끗한 먹는 물로 충분히 헹궈내는 것이 올바른 방법입니다."
+        },
+        {
+            id: 23, type: "DRAG",
+            question: "탐침온도계는 사용후 이물질을 깨끗하게 씻어내고, 알콜 등으로 ( ) 및 완전히 ( )한 뒤 전용 용기에 담아 안전하게 보관해야 합니다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/nov_2.webp?raw=true", 
+            answer: ["소독", "건조"], 
+            options: ["세척", "건조", "가열", "소독"],
+            hint: "",
+            explanation: "탐침온도계는 사용 후 반드시 깨끗하게 세척, 소독, 건조하여 전용 용기에 보관해야 합니다."
+        },
+        {
+            id: 24, type: "SPOT_WRONG",
+            question: "미션! 바쁘게 돌아가는 조리실, 교묘하게 숨어있는 위생의 빈틈을 찾아주세요!",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/nov_3.webp?raw=true", 
+            answer: { x: 17.0, y: 54.3, radius: 15 },
+            hint: "", 
+            explanation: "두께가 얇은 전의 중심온도를 잴 때는 3개 정도 겹쳐서 측정해야 합니다."
+        }
+    ],
+    december: [
+        {
+            id: 25, type: "OX", 
+            question: "배식하던 용기에 남은 음식을\n 새로운 음식과 섞어(혼합하여) 배식해도 된다?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/dec_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "남은 음식을 새로운 배식통에 혼합하면 안 되며, 배식 종료 시간 등을 정확히 준수해야 합니다."
+        },
+        {
+            id: 26, type: "MULTI", layout: "grid",
+            question: "따뜻하게 제공되는 국, 찌개, 볶음 등의 열장 음식은 배식이 완전히 끝날 때까지 몇 ℃ 이상으로 온도를 유지해 주어야 할까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/dec_2.webp?raw=true", 
+            answer: "3", 
+            options: ["1. 45℃ 이상.", "2. 50℃ 이상.", "3. 57℃ 이상.", "4. 75℃ 이상."],
+            hint: "",
+            explanation: "음식은 배식이 끝나는 순간까지 57℃ 이상을 유지해 주어야 미생물의 증식과 식중독 포자의 발아를 안전하게 막을 수 있습니다."
+        },
+        {
+            id: 27, type: "CHOSUNG",
+            question: "식중독 사고가 났을 때 원인을 찾기 위해, 배식했던 음식의 1인분(150g 이상 권장)을 전용 용기에 담아 –18℃ 이하에서 144시간(6일) 동안 냉동 보관하는 것을 무엇이라고 할까요? (ㅂㅈㅅ)",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/dec_3.webp?raw=true", 
+            answer: "보존식",
+            hint: ["ㅂ", "ㅈ", "ㅅ"], 
+            explanation: "만약의 사태를 대비해 급식실에서 반드시 지켜야 하는 관리 규정입니다."
+        }
+    ],
+    february: [
+        {
+            id: 28, type: "OX", 
+            question: "청소할 때 사용한 앞치마와 고무장갑을 깨끗이 씻어서 조리할 때 사용해도 괜찮다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/feb_1.webp?raw=true", 
+            answer: "X", options: [], hint: "", 
+            explanation: "청소용 복장(앞치마, 고무장갑 등)은 청소할 때만 입어야 하며, 조리할 때 입으면 세균이 음식에 들어갑니다."
+        },
+        {
+            id: 29, type: "MULTI",
+            question: "조리실 내 쓰레기통 관리는 어떻게 하는 것이\n 가장 좋을까요?",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/feb_2.webp?raw=true", 
+            answer: "3", 
+            options: ["1. 사용하기 편하게 뚜껑을 항상 열어둔다", "2. 쓰레기는 가득 채워 배출한다", "3. 매일 비우고 깨끗이 씻는다", "4. 조리대 바로 옆에 바짝 붙여둔다"],
+            hint: "",
+            explanation: "악취와 벌레 꼬임을 막기 위해 쓰레기(잔반)는 매일 비우고 주변을 청결하게 관리해야 합니다."
+        },
+        {
+            id: 30, type: "DRAG", 
+            question: "식품창고에서 건조식품과 곡류 등을 상온 보관할 때 통풍과 청소가 용이하도록 선반은 벽·바닥에서 ( )cm 이상 띄어야 합니다.",
+            imageUrl: "https://github.com/thtkssla/foodhygiene/blob/main/feb_3.webp?raw=true",
+            answer: "15", 
+            options: ["5", "10", "15", "30"],
+            hint: "",
+            explanation: "통풍과 청소를 위해 선반은 벽과 바닥에서 15cm 이상 띄워 보관해야 합니다."
+        }
+    ]
+};
+
+const monthLabels = {
+    march: "3월", april: "4월", may: "5월", june: "6월", july: "7월", 
+    september: "9월", october: "10월", november: "11월", december: "12월", february: "2월"
+};
+
+const quizThemes = {
+    march: "-개인위생 & 올바른 손 씻기-",
+    april: "-학교급식 HACCP 시스템-",
+    may: "-식재료 검수 & 보관 준수사항-",
+    june: "-교차오염 예방 & 구분 사용-",
+    july: "-급식기구 위생 관리-", 
+    september: "-이물질 관리 및 신고절차-",
+    october: "-안전한 해동 & 전처리 준수사항-",
+    november: "-소독과 가열-",
+    december: "-보존식 & 배식 관리-",
+    february: "-환경 위생 관리-"
+};
+
+let currentMonthKey = '';
+let currentQuestionIndex = 0;
+let selectedAnswer = '';
+
+let dragState = {
+    isDragging: false, element: null, clone: null, startX: 0, startY: 0, originalRect: null
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const correctContainer = document.getElementById('correct-icon-container');
+    if (correctIconUrl) {
+        correctContainer.innerHTML = `<img src="${correctIconUrl}" class="feedback-custom-icon" alt="정답 아이콘">`;
+    }
+    
+    const incorrectContainer = document.getElementById('incorrect-icon-container');
+    if (incorrectIconUrl) {
+        incorrectContainer.innerHTML = `<img src="${incorrectIconUrl}" class="feedback-custom-icon" alt="오답 아이콘">`;
+    }
+
+    renderHome();
+    initDragAndDrop(); 
+});
+
+function initDragAndDrop() {
+    document.addEventListener('pointerdown', (e) => {
+        if (e.target.classList.contains('drag-item') && e.target.style.visibility !== 'hidden') {
+            dragState.isDragging = true;
+            dragState.element = e.target;
+            dragState.startX = e.clientX;
+            dragState.startY = e.clientY;
+            
+            dragState.originalRect = e.target.getBoundingClientRect();
+            
+            const clone = e.target.cloneNode(true);
+            clone.classList.add('drag-clone');
+            clone.style.left = dragState.originalRect.left + 'px';
+            clone.style.top = dragState.originalRect.top + 'px';
+            clone.style.width = dragState.originalRect.width + 'px';
+            
+            document.body.appendChild(clone);
+            dragState.clone = clone;
+            
+            e.target.style.opacity = '0.3';
+            e.target.setPointerCapture(e.pointerId);
+        }
+    });
+
+    document.addEventListener('pointermove', (e) => {
+        if (!dragState.isDragging || !dragState.clone) return;
+        
+        if (e.cancelable) e.preventDefault(); 
+        
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        dragState.clone.style.transform = `translate(${dx}px, ${dy}px)`;
+        
+        const dropZones = document.querySelectorAll('.drop-zone');
+        let closestZone = null;
+        let minDistance = 80; 
+
+        dropZones.forEach(dz => {
+            dz.classList.remove('active-drop');
+            const dzRect = dz.getBoundingClientRect();
+            const dzCenterX = dzRect.left + dzRect.width / 2;
+            const dzCenterY = dzRect.top + dzRect.height / 2;
+            
+            const dist = Math.sqrt(Math.pow(e.clientX - dzCenterX, 2) + Math.pow(e.clientY - dzCenterY, 2));
+            
+            if (dist < minDistance) {
+                minDistance = dist;
+                closestZone = dz;
+            }
+        });
+
+        if (closestZone) {
+            closestZone.classList.add('active-drop');
+        }
+
+    }, { passive: false });
+
+    document.addEventListener('pointerup', (e) => {
+        if (!dragState.isDragging) return;
+        
+        let dropped = false;
+        const dropZones = document.querySelectorAll('.drop-zone');
+        let targetZone = null;
+        
+        dropZones.forEach(dz => {
+            if (dz.classList.contains('active-drop')) {
+                targetZone = dz;
+            }
+        });
+
+        const dx = e.clientX - dragState.startX;
+        const dy = e.clientY - dragState.startY;
+        const distance = Math.sqrt(dx*dx + dy*dy);
+        
+        if (!targetZone && distance < 15) { 
+            targetZone = Array.from(dropZones).find(dz => !dz.dataset.val);
+            
+            if (!targetZone && dropZones.length > 0) {
+                targetZone = dropZones[dropZones.length - 1]; 
+            }
+        }
+
+        if (targetZone) {
+            if (targetZone.dataset.val) {
+                const prevItem = document.querySelector(`.drag-item[data-val="${targetZone.dataset.val}"]`);
+                if (prevItem) {
+                    prevItem.style.opacity = '1';
+                    prevItem.style.visibility = 'visible';
+                }
+            }
+            
+            const val = dragState.element.dataset.val;
+            targetZone.innerText = val;
+            targetZone.dataset.val = val;
+            targetZone.classList.add('has-item');
+            
+            dragState.element.style.visibility = 'hidden'; 
+            dropped = true;
+            
+            const allFilled = Array.from(dropZones).every(dz => dz.dataset.val);
+            document.getElementById('submit-btn').disabled = !allFilled;
+        }
+        
+        dropZones.forEach(dz => dz.classList.remove('active-drop'));
+        
+        if (!dropped) dragState.element.style.opacity = '1'; 
+        
+        dragState.clone.remove();
+        dragState.element.releasePointerCapture(e.pointerId);
+        
+        dragState = { isDragging: false, element: null, clone: null, startX: 0, startY: 0, originalRect: null };
+    });
+}
+
+function renderHome() {
+    switchScreen('home-screen');
+    document.getElementById('header-home-btn').style.display = 'none'; 
+    
+    const iconLeftHtml = mainIconUrl ? `<img src="${mainIconUrl}" class="header-icon" alt="아이콘">` : '<span style="font-size: 2.4rem;">🍽️</span>';
+    const iconRightHtml = mainRightIconUrl ? `<img src="${mainRightIconUrl}" class="header-icon" alt="아이콘">` : '<span style="font-size: 2.4rem;">✨</span>';
+    
+    const titleHtml = titleImageUrl 
+        ? `<img src="${titleImageUrl}" alt="유퀴즈?" style="height: 3.0rem; width: auto; max-width: 50vw; object-fit: contain; margin: 0 10px;">` 
+        : `<span style="margin: 0 10px;">유퀴즈?</span>`;
+        
+    document.getElementById('header-title').innerHTML = `${iconLeftHtml} ${titleHtml} ${iconRightHtml}`;
+    
+    const grid = document.getElementById('month-grid');
+    grid.innerHTML = '';
+    
+    for (const [key, label] of Object.entries(monthLabels)) {
+        const btn = document.createElement('div');
+        btn.className = 'month-btn';
+        
+        const hasData = quizData[key] && quizData[key].length > 0;
+        const themeText = quizThemes[key] ? quizThemes[key] : '';
+        
+        if (hasData) {
+            btn.classList.add('active-month');
+            btn.innerHTML = `
+                <div style="font-size: 1.1rem; font-weight: 700;">${label} 교육</div>
+                ${themeText ? `<div style="font-size: 0.85rem; font-weight: 500; opacity: 0.8; margin-top: 4px; word-break: keep-all;">${themeText}</div>` : ''}
+            `;
+            btn.onclick = () => startGame(key);
+        } else {
+            btn.classList.add('disabled-month');
+            btn.innerHTML = `
+                <div style="font-size: 1.1rem; font-weight: 700;">${label} 교육</div>
+                <div style="font-size: 0.85rem; font-weight: 400; opacity: 0.7; margin-top: 4px;">준비 중</div>
+            `;
+            btn.onclick = () => showToast('해당 월의 교육은 준비 중입니다.');
+        }
+        grid.appendChild(btn);
+    }
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.style.display = 'block';
+    toast.style.animation = 'none';
+    void toast.offsetWidth; 
+    toast.style.animation = 'toastFade 2.5s ease forwards';
+    setTimeout(() => { toast.style.display = 'none'; }, 2500);
+}
+
+function startGame(monthKey) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    document.getElementById('header-home-btn').style.display = 'flex'; 
+    
+    currentMonthKey = monthKey;
+    currentQuestionIndex = 0;
+    
+    const iconLeftHtml = quizIconUrl ? `<img src="${quizIconUrl}" class="header-icon" alt="아이콘">` : '<span style="font-size: 2.4rem;">✏️</span>';
+    document.getElementById('header-title').innerHTML = `${iconLeftHtml} <span style="margin: 0 10px;">${monthLabels[monthKey]} 위생교육 퀴즈</span>`;
+    
+    const themeText = quizThemes[monthKey] ? quizThemes[monthKey] : monthLabels[monthKey];
+    document.getElementById('quiz-month-badge').innerText = themeText;
+    
+    renderQuestion();
+    switchScreen('quiz-screen');
+}
+
+function renderQuestion() {
+    const data = quizData[currentMonthKey][currentQuestionIndex];
+    const total = quizData[currentMonthKey].length;
+    selectedAnswer = '';
+
+    document.getElementById('quiz-progress').innerText = `${currentQuestionIndex + 1} / ${total}`;
+    
+    if (data.type === 'DRAG') {
+        let dzIndex = 0;
+        const qHtml = data.question.replace(/\(\s*\)|\(\)/g, () => {
+            return `<span class="drop-zone" data-index="${dzIndex++}"></span>`;
+        });
+        document.getElementById('question-text').innerHTML = qHtml;
+    } else {
+        document.getElementById('question-text').innerText = data.question;
+    }
+    
+    const questionImage = document.getElementById('question-image');
+    if (data.imageUrl && data.imageUrl.trim() !== '') {
+        questionImage.src = data.imageUrl;
+        questionImage.style.display = 'block';
+    } else {
+        questionImage.style.display = 'none';
+        questionImage.src = '';
+    }
+    
+    const inputArea = document.getElementById('input-area');
+    const submitBtn = document.getElementById('submit-btn');
+    inputArea.innerHTML = '';
+    inputArea.style.display = 'flex';
+    
+    submitBtn.style.display = 'flex';
+    submitBtn.disabled = true;
+    document.getElementById('inline-feedback').style.display = 'none';
+
+    if (data.type === 'SPOT_WRONG') {
+        questionImage.style.display = 'none';
+    }
+
+    if (data.type === 'OX') renderOX(inputArea);
+    else if (data.type === 'MULTI') renderMulti(inputArea, data);
+    else if (data.type === 'CHOSUNG') renderChosung(inputArea, data);
+    else if (data.type === 'DRAG') renderDrag(inputArea, data); 
+    else if (data.type === 'SPOT_WRONG') renderSpotWrong(inputArea, data);
+}
+
+function renderDrag(container, data) {
+    const wrap = document.createElement('div');
+    wrap.className = 'drag-options-container';
+
+    data.options.forEach(opt => {
+        const item = document.createElement('div');
+        item.className = 'drag-item';
+        item.innerText = opt;
+        item.setAttribute('data-val', opt);
+        wrap.appendChild(item);
+    });
+    
+    container.appendChild(wrap);
+    
+    setTimeout(() => {
+        document.querySelectorAll('.drop-zone').forEach(dropZone => {
+            dropZone.onclick = () => {
+                if (dropZone.dataset.val) {
+                    const prevItem = document.querySelector(`.drag-item[data-val="${dropZone.dataset.val}"]`);
+                    if(prevItem) {
+                        prevItem.style.opacity = '1';
+                        prevItem.style.visibility = 'visible';
+                    }
+                    dropZone.innerText = '';
+                    dropZone.dataset.val = '';
+                    dropZone.classList.remove('has-item');
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            };
+        });
+    }, 0);
+    
+    const guide = document.createElement('p');
+    guide.style.textAlign = 'center';
+    guide.style.color = 'var(--gray-text)';
+    guide.style.fontSize = '0.9rem';
+    guide.innerText = '보기를 직접 끌어당기거나 터치해서 빈칸에 쏙 넣어보세요!';
+    container.appendChild(guide);
+}
+
+function renderOX(container) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ox-container';
+    ['O', 'X'].forEach(val => {
+        const btn = document.createElement('div');
+        btn.className = `option-btn ox-mode ${val === 'O' ? 'ox-btn-o' : 'ox-btn-x'}`;
+        btn.innerText = val;
+        btn.onclick = () => selectOption(btn, val, '.ox-mode');
+        wrap.appendChild(btn);
+    });
+    container.appendChild(wrap);
+}
+
+function renderMulti(container, data) {
+    const isGrid = data.layout === 'grid';
+    let targetContainer = container;
+
+    if (isGrid) {
+        const wrap = document.createElement('div');
+        wrap.style.display = 'grid';
+        wrap.style.gridTemplateColumns = '1fr 1fr';
+        wrap.style.gap = '12px';
+        container.appendChild(wrap);
+        targetContainer = wrap;
+    }
+
+    data.options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        
+        if (isGrid) {
+            btn.style.justifyContent = 'center';
+            btn.style.textAlign = 'center';
+        }
+
+        const val = opt.charAt(0); 
+        btn.onclick = () => selectOption(btn, val, '.option-btn');
+        targetContainer.appendChild(btn);
+    });
+}
+
+function selectOption(clickedBtn, value, selector) {
+    document.querySelectorAll(selector).forEach(b => b.classList.remove('selected'));
+    clickedBtn.classList.add('selected');
+    selectedAnswer = value;
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function renderChosung(container, data) {
+    const ansLength = data.answer.length;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chosung-wrapper';
+
+    const boxContainer = document.createElement('div');
+    boxContainer.className = 'box-container';
+    boxContainer.style.pointerEvents = 'auto';
+    boxContainer.style.position = 'relative';
+    boxContainer.style.zIndex = '10';
+    
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.className = 'hidden-input';
+    hiddenInput.maxLength = ansLength;
+    hiddenInput.autocomplete = 'off';
+
+    const updateVisuals = () => {
+        const val = hiddenInput.value;
+        selectedAnswer = val;
+        for(let i=0; i<ansLength; i++) {
+            const box = document.getElementById(`char-box-${i}`);
+            if (val[i]) {
+                box.innerText = val[i];
+                box.classList.remove('placeholder');
+            } else {
+                box.innerText = data.hint[i] || '';
+                box.classList.add('placeholder');
+            }
+            box.classList.remove('active-focus');
+        }
+        
+        if (val.length < ansLength) {
+            document.getElementById('submit-btn').disabled = true;
+        } else {
+            document.getElementById('submit-btn').disabled = false;
+        }
+
+        let pos = hiddenInput.selectionStart;
+        if (pos >= ansLength && ansLength > 0) {
+            pos = ansLength - 1; 
+        }
+        const activeBox = document.getElementById(`char-box-${pos}`);
+        if (activeBox) activeBox.classList.add('active-focus');
+    };
+    
+    for(let i=0; i<ansLength; i++) {
+        const box = document.createElement('div');
+        box.className = 'char-box placeholder';
+        box.innerText = data.hint[i] || '';
+        box.id = `char-box-${i}`;
+        
+        box.onclick = () => {
+            hiddenInput.focus();
+            setTimeout(() => {
+                const currentLen = hiddenInput.value.length;
+                const targetPos = Math.min(i, currentLen);
+                
+                if (targetPos < currentLen) {
+                    hiddenInput.setSelectionRange(targetPos, targetPos + 1);
+                } else {
+                    hiddenInput.setSelectionRange(targetPos, targetPos);
+                }
+                updateVisuals();
+            }, 10);
+        };
+        
+        boxContainer.appendChild(box);
+    }
+
+    hiddenInput.addEventListener('input', updateVisuals);
+    hiddenInput.addEventListener('click', updateVisuals);
+    hiddenInput.addEventListener('focus', updateVisuals);
+    
+    hiddenInput.addEventListener('keyup', (e) => {
+        updateVisuals(); 
+        if(e.key === 'Enter' && !document.getElementById('submit-btn').disabled) {
+            checkAnswer();
+            hiddenInput.blur();
+        }
+    });
+
+    hiddenInput.addEventListener('blur', () => {
+        document.querySelectorAll('.char-box').forEach(b => b.classList.remove('active-focus'));
+    });
+
+    wrapper.appendChild(hiddenInput);
+    wrapper.appendChild(boxContainer);
+    container.appendChild(wrapper);
+    
+    const guide = document.createElement('p');
+    guide.style.textAlign = 'center';
+    guide.style.color = 'var(--gray-text)';
+    guide.style.fontSize = '0.9rem';
+    guide.innerText = '위 빈칸을 터치하여 정답을 입력하세요. (특정 칸을 눌러 수정 가능)';
+    container.appendChild(guide);
+}
+
+function renderSpotWrong(container, data) {
+    const wrap = document.createElement('div');
+    wrap.className = 'spot-wrong-container';
+
+    const img = document.createElement('img');
+    img.src = data.imageUrl || "https://placehold.co/600x400/E2E8F0/1E293B?text=이미지를+등록해주세요";
+    img.alt = "틀린 그림 찾기 이미지";
+
+    wrap.appendChild(img);
+
+    const answers = Array.isArray(data.answer) ? data.answer : [data.answer];
+    const maxMarks = answers.length;
+    let markers = [];
+    selectedAnswer = []; 
+
+    img.addEventListener('click', (e) => {
+        const rect = img.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const percentX = (x / rect.width) * 100;
+        const percentY = (y / rect.height) * 100;
+
+        const marker = document.createElement('div');
+        marker.className = 'spot-marker';
+        marker.style.left = `${percentX}%`;
+        marker.style.top = `${percentY}%`;
+        marker.style.display = 'block';
+
+        wrap.appendChild(marker);
+        markers.push(marker);
+        selectedAnswer.push({ x: percentX, y: percentY });
+
+        if (markers.length > maxMarks) {
+            const oldMarker = markers.shift();
+            oldMarker.remove();
+            selectedAnswer.shift();
+        }
+
+        // 💡 수정된 부분: 항목을 하나라도 선택하면 버튼이 활성화되도록 변경
+        document.getElementById('submit-btn').disabled = selectedAnswer.length === 0;
+
+        console.log(`[틀린그림찾기 정답 좌표 설정용] x: ${percentX.toFixed(1)}, y: ${percentY.toFixed(1)}`);
+    });
+
+    container.appendChild(wrap);
+
+    const guide = document.createElement('p');
+    guide.style.textAlign = 'center';
+    guide.style.color = 'var(--gray-text)';
+    guide.style.fontSize = '0.9rem';
+    guide.style.marginTop = '10px';
+    
+    guide.innerText = `위 사진에서 잘못된 부분 ${maxMarks > 1 ? maxMarks + '곳을' : '을'} 찾아 터치하세요! (현재 ${maxMarks}개 중 0개 선택)`;
+    
+    img.addEventListener('click', () => {
+        guide.innerText = `위 사진에서 잘못된 부분 ${maxMarks > 1 ? maxMarks + '곳을' : '을'} 찾아 터치하세요! (현재 ${maxMarks}개 중 ${selectedAnswer.length}개 선택)`;
+    });
+
+    container.appendChild(guide);
+}
+
+function checkAnswer() {
+    const data = quizData[currentMonthKey][currentQuestionIndex];
+    let isCorrect = false;
+    let userAnswerText = '';
+    let correctAnswerText = data.answer;
+
+    if (data.type === 'SPOT_WRONG') {
+        const correctAnswers = Array.isArray(data.answer) ? data.answer : [data.answer];
+        const userAnswers = Array.isArray(selectedAnswer) ? selectedAnswer : [selectedAnswer];
+
+        if (userAnswers.length === correctAnswers.length && userAnswers.length > 0 && userAnswers[0].x !== undefined) {
+            let matchedCount = 0;
+            let usedCorrectIndices = new Set(); 
+
+            for (let i = 0; i < userAnswers.length; i++) {
+                const uAns = userAnswers[i];
+                for (let j = 0; j < correctAnswers.length; j++) {
+                    if (usedCorrectIndices.has(j)) continue; 
+                    const cAns = correctAnswers[j];
+                    const dx = uAns.x - cAns.x;
+                    const dy = uAns.y - cAns.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance <= cAns.radius) {
+                        matchedCount++;
+                        usedCorrectIndices.add(j);
+                        break; 
+                    }
+                }
+            }
+            isCorrect = (matchedCount === correctAnswers.length);
+        }
+        
+        userAnswerText = "잘못된 위치 터치";
+        correctAnswerText = "해설 참조";
+    } else if (data.type === 'DRAG') {
+        const dropZones = Array.from(document.querySelectorAll('.drop-zone'));
+        const userAnswers = dropZones.map(dz => dz.dataset.val);
+        
+        if (Array.isArray(data.answer)) {
+            isCorrect = JSON.stringify(userAnswers) === JSON.stringify(data.answer);
+            userAnswerText = userAnswers.map(a => a || '(빈칸)').join(', ');
+            correctAnswerText = data.answer.join(', ');
+        } else {
+            isCorrect = (userAnswers[0] === data.answer);
+            userAnswerText = userAnswers[0] || '(빈칸)';
+        }
+    } else {
+        isCorrect = (selectedAnswer === data.answer);
+        userAnswerText = selectedAnswer || '(빈칸)';
+    }
+
+    if (isCorrect) {
+        playCorrectSound();
+        document.getElementById('input-area').style.display = 'none';
+        document.getElementById('submit-btn').style.display = 'none';
+        
+        // 정답일 경우에도 해설을 표시합니다.
+        document.getElementById('correct-explanation').innerHTML = data.explanation;
+        
+        document.getElementById('inline-feedback').style.display = 'block';
+    } else {
+        playWrongSound();
+
+        const modalHtml = `
+            <div style="margin-bottom:15px; font-size:1.05rem;">
+                입력하신 답: <span style="color:var(--danger); font-weight:bold;">${userAnswerText}</span><br>
+                <span style="color:var(--success); font-weight:bold;">정답: ${correctAnswerText}</span>
+            </div>
+            ${data.explanation}
+        `;
+        document.getElementById('modal-explanation').innerHTML = modalHtml;
+        document.getElementById('feedback-modal').style.display = 'flex';
+    }
+}
+
+function closeModalAndNext() {
+    document.getElementById('feedback-modal').style.display = 'none';
+    nextQuestion();
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex >= quizData[currentMonthKey].length) {
+        document.getElementById('result-title').innerText = `${monthLabels[currentMonthKey]} 교육 완료!`;
+        switchScreen('result-screen');
+    } else {
+        renderQuestion();
+    }
+}
+
+function goHome() {
+    renderHome();
+}
+
+function switchScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+</script>
+
+</body>
+</html>
