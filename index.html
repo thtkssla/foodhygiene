@@ -187,12 +187,12 @@
 
         .question-image {
             width: 100%;
-            height: 220px;
-            object-fit: contain;
+            height: 220px; /* 💡 max-height 대신 고정 높이를 주어 영역 크기를 통일합니다. */
+            object-fit: contain; /* 💡 원본 비율을 유지하며 이미지가 잘리지 않게 합니다. */
             border-radius: 12px;
             margin-bottom: 15px;
             display: none;
-            background-color: var(--bg-color);
+            background-color: var(--bg-color); /* 💡 비율이 달라서 남는 여백에 배경색을 넣어 깔끔한 액자처럼 보이게 합니다. */
         }
 
         .input-area { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; } 
@@ -501,8 +501,7 @@
             <div id="inline-feedback" style="display: none;">
                 <div id="correct-icon-container" style="font-size: 2.5rem; margin-bottom: 10px; display: flex; justify-content: center;">🎉</div>
                 <h2 style="color: var(--success); font-size: 1.3rem; margin: 0 0 10px 0;">정답입니다!</h2>
-                <p style="color: var(--gray-text); font-size: 0.95rem; margin-bottom: 15px; word-break: keep-all;">잘 알고 계시네요! 아래 해설을 읽고 다음 문제로 넘어가주세요.</p>
-                <div id="correct-explanation" style="background: var(--card-bg); color: var(--dark); padding: 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.4); text-align: left; word-break: keep-all;"></div>
+                <p style="color: var(--gray-text); font-size: 0.95rem; margin-bottom: 20px; word-break: keep-all;">잘 알고 계시네요! 다음 문제도 풀어볼까요?</p>
                 <button class="btn btn-success" onclick="nextQuestion()">다음 문제로 이동</button>
             </div>
         </div>
@@ -576,7 +575,9 @@ const quizIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/sub.webp?
 const badgeImageUrl = ""; 
 const correctIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/correct.webp?raw=true"; 
 const incorrectIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/wrong.webp?raw=true"; 
-const titleImageUrl = "https://github.com/thtkssla/foodhygiene/blob/main/%EC%9C%A0%ED%80%B4%EC%A6%88.webp?raw=true"; 
+
+// 💡 새로운 기능: 메인 화면의 '유퀴즈?' 텍스트를 이미지로 변경하고 싶다면 아래 큰따옴표 안에 이미지 주소를 넣어주세요.
+const titleImageUrl = "https://github.com/thtkssla/foodhygiene/blob/main/%EC%9C%A0%ED%80%B4%EC%A6%88.webp?raw=true"; // 예시: "https://example.com/title.png"
 
 const quizData = {
     march: [
@@ -886,6 +887,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderHome();
     initDragAndDrop(); 
+    
+    // URL 파라미터 확인하여 특정 월 퀴즈 바로 시작 기능 추가
+    const urlParams = new URLSearchParams(window.location.search);
+    const monthParam = urlParams.get('month');
+    
+    if (monthParam) {
+        // 숫자 파라미터를 영문 키값으로 매핑
+        const monthMap = {
+            '2': 'february', '3': 'march', '4': 'april', '5': 'may', 
+            '6': 'june', '7': 'july', '9': 'september', '10': 'october', 
+            '11': 'november', '12': 'december'
+        };
+        
+        const targetMonthKey = monthMap[monthParam] || monthParam;
+        
+        // 데이터가 존재하는 유효한 월일 경우에만 바로 시작
+        if (quizData[targetMonthKey] && quizData[targetMonthKey].length > 0) {
+            startGame(targetMonthKey);
+        }
+    }
 });
 
 function initDragAndDrop() {
@@ -1009,6 +1030,8 @@ function renderHome() {
     const iconLeftHtml = mainIconUrl ? `<img src="${mainIconUrl}" class="header-icon" alt="아이콘">` : '<span style="font-size: 2.4rem;">🍽️</span>';
     const iconRightHtml = mainRightIconUrl ? `<img src="${mainRightIconUrl}" class="header-icon" alt="아이콘">` : '<span style="font-size: 2.4rem;">✨</span>';
     
+    // 💡 새로운 로직: titleImageUrl 값이 존재하면 이미지를, 비어있으면 기존 '유퀴즈?' 텍스트를 표시
+    // 이미지 높이를 3.5rem으로 설정하고, 모바일 화면을 넘지 않도록 max-width 속성 추가
     const titleHtml = titleImageUrl 
         ? `<img src="${titleImageUrl}" alt="유퀴즈?" style="height: 3.0rem; width: auto; max-width: 50vw; object-fit: contain; margin: 0 10px;">` 
         : `<span style="margin: 0 10px;">유퀴즈?</span>`;
@@ -1189,6 +1212,7 @@ function renderMulti(container, data) {
         btn.className = 'option-btn';
         btn.innerText = opt;
         
+        // 2x2 그리드 모드일 경우 글자를 중앙에 정렬
         if (isGrid) {
             btn.style.justifyContent = 'center';
             btn.style.textAlign = 'center';
@@ -1344,8 +1368,7 @@ function renderSpotWrong(container, data) {
             selectedAnswer.shift();
         }
 
-        // 💡 수정된 부분: 항목을 하나라도 선택하면 버튼이 활성화되도록 변경
-        document.getElementById('submit-btn').disabled = selectedAnswer.length === 0;
+        document.getElementById('submit-btn').disabled = selectedAnswer.length < maxMarks;
 
         console.log(`[틀린그림찾기 정답 좌표 설정용] x: ${percentX.toFixed(1)}, y: ${percentY.toFixed(1)}`);
     });
@@ -1423,10 +1446,6 @@ function checkAnswer() {
         playCorrectSound();
         document.getElementById('input-area').style.display = 'none';
         document.getElementById('submit-btn').style.display = 'none';
-        
-        // 정답일 경우에도 해설을 표시합니다.
-        document.getElementById('correct-explanation').innerHTML = data.explanation;
-        
         document.getElementById('inline-feedback').style.display = 'block';
     } else {
         playWrongSound();
