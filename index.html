@@ -556,17 +556,30 @@ function playCorrectSound() {
 
 function playWrongSound() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.type = 'triangle'; 
-    osc.frequency.setValueAtTime(350, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-    osc.start(audioCtx.currentTime);
-    osc.stop(audioCtx.currentTime + 0.4);
+    const now = audioCtx.currentTime;
+    
+    // 부드럽고 통통 튀는 '둥~ 둥~' 하강음 (실로폰/마림바 느낌)
+    const playTone = (freq, startTime, duration) => {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sine'; // 부드러운 소리
+        osc.frequency.setValueAtTime(freq, startTime);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, startTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+    };
+
+    // 약간 시차를 두고 떨어지는 두 개의 음 플레이
+    playTone(250, now, 0.25);        // 첫 번째 음
+    playTone(180, now + 0.15, 0.35); // 두 번째 더 낮은 음 (0.15초 뒤)
 }
 
 const mainIconUrl = "https://github.com/thtkssla/foodhygiene/blob/main/main_1.webp?raw=true"; 
